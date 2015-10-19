@@ -9,36 +9,37 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Diagnostics;
-using System.Threading; // Obsluga wątków
+using System.Threading; // Threads using
 
 namespace PW_Lab1
 {
     public partial class Form1 : Form
     {
-        // Dostep z roznych watkow - volatile 
-        private byte[] tablica_bajtow;
-        private volatile int[] tab_int;
+        // Access from few threads - volatile 
+        static volatile byte[] bytesTab;
+        static volatile int[] histogramTab;
         Random random;
         Thread thread_pomocniczy, t1, t2, t3, t4;
-        Stopwatch sw;
+        Thread[] threadsTab;
+        int startTime, stopTime;
 
         public Form1()
         {
             InitializeComponent();
 
-            // Wyłączona kontrola !!!!!!!!
+            // Disabling form control !
             Form1.CheckForIllegalCrossThreadCalls = false;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            tablica_bajtow = new byte[4000000];
+            bytesTab = new byte[4000000];
             random = new Random(7);
             
-            // Generowanie tablicy bajtów
-            random.NextBytes(tablica_bajtow);
+            // "Generating" byte's tab
+            random.NextBytes(bytesTab);
 
-            // Uruchomienie wypisania tablicy za pomocą wątku 
+            // write out the byte tab using helper thread...
             thread_pomocniczy = new Thread(showTabInPanel);
             thread_pomocniczy.Start();
             
@@ -51,7 +52,7 @@ namespace PW_Lab1
         {
             for (int i = 0; i < 10; i++)
             {
-                textBox1.Text += tablica_bajtow[i] + ", ";
+                textBox1.Text += bytesTab[i] + ", ";
                 //if (i % 5 == 1 && i != 1)
                   //  textBox1.Text += "\n";
             }    
@@ -60,67 +61,61 @@ namespace PW_Lab1
 
         private void button2_Click(object sender, EventArgs e)
         {
-            // Tablica do histogramu
-            tab_int = new int[256];
+            // table to histogram 
+            histogramTab = new int[256];
 
-            sw = new Stopwatch();
-
-            // Generowanie histogramu w zależności od trybu
+            // generating histogram depends on threads amount
             switch(comboBox1.Text.ToString())
             {
-                    // TODO Jakiś manager wątków, żeby zwracał tablicę w zależności od parametrów 
                 case "Sekwencyjnie":
-                    ThreadStart ts = delegate() { licz_histogram(0, tablica_bajtow.Length); };
-                    t1 = new Thread(ts);
 
-                    sw.Start(); // Start stop watch
-
-                    t1.Start();
-
-                    ////////////////////this//////////////////
-                    /*
-                    while (t1.IsAlive)
+                    threadsTab = new Thread[1];
+                    for (int i = 0; i < threadsTab.Length; i++ )
                     {
-                        Thread.Sleep(50);
+                        threadsTab[i] = this.getThread(1,i);
                     }
-                    */
-                    ///////////////or this ////////////////////
-                    t1.Join(); // czekam na zakończenie
 
-                    sw.Stop(); // Stop
-                    MessageBox.Show(sw.ElapsedMilliseconds.ToString());
+                    startTime = Environment.TickCount;
+                    foreach(Thread t in threadsTab)
+                    {
+                        t.Start();
+                        t.Join();
+                    }
+                    stopTime = Environment.TickCount;
+
+                    MessageBox.Show(Convert.ToString((stopTime - startTime)));
+                    
                     break;
 
                 case "2 wątki":
-                    ThreadStart ts1 = delegate() { licz_histogram(0, tablica_bajtow.Length/2); }; //todo: klasa/metoda do zarządzania przedziałami
-                    ThreadStart ts2 = delegate() { licz_histogram(tablica_bajtow.Length/2, tablica_bajtow.Length); };
-                    t1 = new Thread(ts1);
-                    t2 = new Thread(ts2);
 
-                    sw.Start(); // Start stop watch
+                    threadsTab = new Thread[2];
+                     for (int i = 0; i < threadsTab.Length; i++ )
+                    {
+                        threadsTab[i] = this.getThread(2,i);
+                    }
 
-                    t1.Start();
-                    t2.Start();
+                    startTime = Environment.TickCount;
+                    foreach(Thread t in threadsTab)
+                    {
+                        t.Start();
+                        t.Join();
+                    }
+                    stopTime = Environment.TickCount;
 
-                    t1.Join();
-                    t2.Join();
-
-                    sw.Stop(); // Stop 
-                    MessageBox.Show(sw.ElapsedMilliseconds.ToString());
+                    MessageBox.Show(Convert.ToString((stopTime - startTime)));
                     break;
 
                 case "4 wątki":
-                    ThreadStart ts4_1 = delegate() { licz_histogram(0, tablica_bajtow.Length/4); };
-                    ThreadStart ts4_2 = delegate() { licz_histogram(tablica_bajtow.Length/4, tablica_bajtow.Length/2); };
-                    ThreadStart ts4_3 = delegate() { licz_histogram(tablica_bajtow.Length / 2, tablica_bajtow.Length - tablica_bajtow.Length/4); };
-                    ThreadStart ts4_4 = delegate() { licz_histogram(tablica_bajtow.Length - tablica_bajtow.Length / 4, tablica_bajtow.Length); };
+                    ThreadStart ts4_1 = delegate() { countHistogram(0, bytesTab.Length/4); };
+                    ThreadStart ts4_2 = delegate() { countHistogram(bytesTab.Length/4, bytesTab.Length/2); };
+                    ThreadStart ts4_3 = delegate() { countHistogram(bytesTab.Length / 2, bytesTab.Length - bytesTab.Length/4); };
+                    ThreadStart ts4_4 = delegate() { countHistogram(bytesTab.Length - bytesTab.Length / 4, bytesTab.Length); };
 
                     t1 = new Thread(ts4_1);
                     t2 = new Thread(ts4_2);
                     t3 = new Thread(ts4_3);
                     t4 = new Thread(ts4_4);
-
-                    sw.Start(); // Start stop watch
 
                     t1.Start();
                     t2.Start();
@@ -132,39 +127,79 @@ namespace PW_Lab1
                     t3.Join();
                     t4.Join();
 
-                    sw.Stop(); // Stop 
-                    MessageBox.Show(sw.ElapsedMilliseconds.ToString());
-
                     break;
             }
 
-
-
-            this.rysuj_histogram();
+            this.drawHistogram();
             
         }
 
-        private void licz_histogram(int _start, int _end)
+        private void countHistogram(int _start, int _end)
         {
 
             for(int i= _start; i< _end; i++)
             {
-                byte tmp_byte =  tablica_bajtow[i];
-                tab_int[tmp_byte] += 1;
+                byte tmp_byte =  bytesTab[i];
+                histogramTab[tmp_byte] += 1;
             }   
         }
 
-        private void rysuj_histogram()
+        private void drawHistogram()
         {
             this.chart1.Palette = ChartColorPalette.BrightPastel;
 
-            for (int i = 0; i < tab_int.Length; i++)
+            for (int i = 0; i < histogramTab.Length; i++)
             {
                 // Add series
-                this.chart1.Series["Histogram"].Points.AddXY(Convert.ToString(i), tab_int[i]);
+                this.chart1.Series["Histogram"].Points.AddXY(Convert.ToString(i), histogramTab[i]);
             }
         }
 
+        private Thread getThread(int _threadQuantity, int _threadNumber)
+        {
+            Thread threadTmp;
+            ThreadStart ts = this.getThreadStart(_threadQuantity, _threadNumber);
+
+            threadTmp = new Thread(ts);
+
+            return threadTmp;
+        }
+
+        private ThreadStart getThreadStart(int _threadQuantity, int _threadNumber)
+        {
+            int[,] compartments;
+            compartments = this.getSecion(_threadQuantity);
+
+            int begin = compartments[_threadNumber, 0];
+            int end = compartments[_threadNumber, 1];
+
+            ThreadStart ts = delegate() 
+                            { 
+                                countHistogram(begin, end); 
+                            };
+
+            return ts;
+        }
+
+        private int[,] getSecion(int _threadQuantity)
+        {
+            int[,] intTabTmp = new int[_threadQuantity,2];  
+
+            // Cons compartments
+            switch(_threadQuantity)
+            {
+                case 1: // Single thread 
+                    intTabTmp = new int[1,2] {{0, bytesTab.Length}};
+                    break;
+
+                case 2:
+                    intTabTmp = new int[2, 2] {{0, bytesTab.Length/2 -1},
+                                               {bytesTab.Length/2, bytesTab.Length}};
+                    break;
+            }
+
+            return intTabTmp;
+        }
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -173,14 +208,13 @@ namespace PW_Lab1
 
         private void button3_Click(object sender, EventArgs e)
         {
-            string[] dane = new string[tab_int.Length];
-            for(int i=0; i<tab_int.Length;i++)
+            string[] dane = new string[histogramTab.Length];
+            for(int i=0; i<histogramTab.Length;i++)
             {
-                dane[i] += tab_int[i].ToString();
+                dane[i] += histogramTab[i].ToString();
             }
             
             //System.IO.File.WriteAllLines(@"C:\Users\Piotr\Desktop\4.txt", dane);
-            
         }
     }
 }
