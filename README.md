@@ -1,4 +1,5 @@
-# PW_LAB1
+# Programowanie Współbieżne
+
 Należy zbudować aplikację obliczającą histogram tablicy bajtów o podanej specyfikacji:
 1. Aplikacja działa sekwencyjnie lub tworzy 2,4,8,10,12,14,16 wątków.
 2. Rozmiar tablicy musi być nie mniejszy niż 4 mln bajtów.
