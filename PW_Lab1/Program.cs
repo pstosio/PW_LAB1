@@ -17,8 +17,15 @@ namespace PW_Lab1
         [STAThread]
         static void Main()
         {
-            //Process.Start("icedragon.exe", "www.onet.pl"); //:)
-
+            // bonus line:)
+            try
+            {
+                //Process.Start("firefox.exe", "www.google.pl"); 
+            }
+            catch (Exception e)
+            {
+                //do some
+            }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());

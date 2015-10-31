@@ -16,8 +16,8 @@ namespace PW_Lab1
     public partial class Form1 : Form
     {
         // Access from few threads - volatile 
-        static volatile byte[] bytesTab;
-        static volatile int[] histogramTab;
+        public byte[] bytesTab;
+        public int[] histogramTab;
         Random random;
         Thread thread_pomocniczy, t1, t2, t3, t4;
         Thread[] threadsTab;
@@ -29,6 +29,8 @@ namespace PW_Lab1
 
             // Disabling form control !
             Form1.CheckForIllegalCrossThreadCalls = false;
+
+            this.textBox2.Text = "Threads : Time:";
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -61,14 +63,16 @@ namespace PW_Lab1
 
         private void button2_Click(object sender, EventArgs e)
         {
+            // clearing the histogram
+            this.chart1.Series["Histogram"].Points.Clear();
             // table to histogram 
             histogramTab = new int[256];
 
-            // generating histogram depends on threads amount
+            // generating histogram depends on threads amount 
             switch(comboBox1.Text.ToString())
             {
-                case "Sekwencyjnie":
-
+                case "sequentially":
+                    
                     threadsTab = new Thread[1];
                     for (int i = 0; i < threadsTab.Length; i++ )
                     {
@@ -79,55 +83,60 @@ namespace PW_Lab1
                     foreach(Thread t in threadsTab)
                     {
                         t.Start();
+                    }
+                    foreach (Thread t in threadsTab)
+                    {
                         t.Join();
                     }
                     stopTime = Environment.TickCount;
-
-                    MessageBox.Show(Convert.ToString((stopTime - startTime)));
-                    
+                    this.addListing(1, stopTime - startTime);                    
                     break;
 
-                case "2 wątki":
+                case "2 threads":
 
                     threadsTab = new Thread[2];
                      for (int i = 0; i < threadsTab.Length; i++ )
                     {
                         threadsTab[i] = this.getThread(2,i);
+                        threadsTab[i].Priority = ThreadPriority.Highest;
                     }
 
                     startTime = Environment.TickCount;
                     foreach(Thread t in threadsTab)
                     {
                         t.Start();
+                    }
+                    foreach (Thread t in threadsTab)
+                    {
                         t.Join();
                     }
                     stopTime = Environment.TickCount;
 
-                    MessageBox.Show(Convert.ToString((stopTime - startTime)));
+                    this.addListing(2, stopTime - startTime);  
                     break;
 
-                case "4 wątki":
-                    ThreadStart ts4_1 = delegate() { countHistogram(0, bytesTab.Length/4); };
-                    ThreadStart ts4_2 = delegate() { countHistogram(bytesTab.Length/4, bytesTab.Length/2); };
-                    ThreadStart ts4_3 = delegate() { countHistogram(bytesTab.Length / 2, bytesTab.Length - bytesTab.Length/4); };
-                    ThreadStart ts4_4 = delegate() { countHistogram(bytesTab.Length - bytesTab.Length / 4, bytesTab.Length); };
+                case "4 threads":
+                    threadsTab = new Thread[4];
+                     for (int i = 0; i < threadsTab.Length; i++ )
+                    {
+                        threadsTab[i] = this.getThread(4,i);
+                        threadsTab[i].Priority = ThreadPriority.Highest;
+                    }
 
-                    t1 = new Thread(ts4_1);
-                    t2 = new Thread(ts4_2);
-                    t3 = new Thread(ts4_3);
-                    t4 = new Thread(ts4_4);
+                    startTime = Environment.TickCount;
+                    foreach(Thread t in threadsTab)
+                    {
+                        t.Start();
+                    }
+                    foreach (Thread t in threadsTab)
+                    {
+                        t.Join();
+                    }
+                    stopTime = Environment.TickCount;
 
-                    t1.Start();
-                    t2.Start();
-                    t3.Start();
-                    t4.Start();
-
-                    t1.Join();
-                    t2.Join();
-                    t3.Join();
-                    t4.Join();
-
+                    this.addListing(4, stopTime - startTime);  
                     break;
+
             }
 
             this.drawHistogram();
@@ -136,7 +145,6 @@ namespace PW_Lab1
 
         private void countHistogram(int _start, int _end)
         {
-
             for(int i= _start; i< _end; i++)
             {
                 byte tmp_byte =  bytesTab[i];
@@ -192,9 +200,16 @@ namespace PW_Lab1
                     intTabTmp = new int[1,2] {{0, bytesTab.Length}};
                     break;
 
-                case 2:
+                case 2: // TWo threads
                     intTabTmp = new int[2, 2] {{0, bytesTab.Length/2 -1},
                                                {bytesTab.Length/2, bytesTab.Length}};
+                    break;
+
+                case 4: // Four threads
+                    intTabTmp = new int[4, 2] { {0, bytesTab.Length/4 -1}, 
+                                               {bytesTab.Length/4, bytesTab.Length/2 -1},
+                                               {bytesTab.Length/2, (bytesTab.Length - bytesTab.Length/4) -1},
+                                               {bytesTab.Length - bytesTab.Length/4, bytesTab.Length}};
                     break;
             }
 
@@ -215,6 +230,12 @@ namespace PW_Lab1
             }
             
             //System.IO.File.WriteAllLines(@"C:\Users\Piotr\Desktop\4.txt", dane);
+        }
+
+        private void addListing(int _threadQuantity, int _time)
+        {
+            
+            textBox2.Text += System.Environment.NewLine + String.Format("{0} : {1}", _threadQuantity, _time);
         }
     }
 }
