@@ -24,14 +24,27 @@ namespace PW_Lab1
         int startTime, stopTime;
 
         int timeSeq, numSeq;
+        int time2Threads, num2Threads;
+        int time4Threads, num4Threads;
+        int time8Threads, num8Threads;
+        int time10Threads, num10Threads;
+        int time12Threads, num12Threads;
+        int time14Threads, num14Threads;
+        int time16Threads, num16Threads;
 
         ThreadManager manager = new ThreadManager();
 
         public Form1()
         {
             // Initialiaze variables
-            timeSeq = 0;
-            numSeq = 0;
+            timeSeq = 0; numSeq = 0;
+            time2Threads = 0; num2Threads = 0;
+            time4Threads = 0; num4Threads = 0;
+            time8Threads = 0; num8Threads = 0;
+            time10Threads = 0; num10Threads = 0;
+            time12Threads = 0; num12Threads = 0;
+            time14Threads = 0; num14Threads = 0;
+            time16Threads = 0; num16Threads = 0;
 
             InitializeComponent();
 
@@ -207,7 +220,7 @@ namespace PW_Lab1
 
         private void addListing(int _threadQuantity, int _time)
         {
-            textBox2.Text = System.Environment.NewLine + String.Format("{0} : {1}", _threadQuantity, _time);
+            textBox2.Text += System.Environment.NewLine + String.Format("{0} : {1}", _threadQuantity, _time);
             this.addAverage(_threadQuantity, _time);
         }
 
@@ -224,6 +237,54 @@ namespace PW_Lab1
                     textBox3.Text = numSeq.ToString() + ":" + averageLocal.ToString();
                     break;
 
+                case 2:
+                    num2Threads++;
+                    time2Threads += _time;
+                    averageLocal = time2Threads / num2Threads;
+                    textBox4.Text = num2Threads.ToString() + ":" + averageLocal.ToString();
+                    break;
+
+                case 4:
+                    num4Threads++;
+                    time4Threads += _time;
+                    averageLocal = time4Threads / num4Threads;
+                    textBox5.Text = num4Threads.ToString() + ":" + averageLocal.ToString();
+                    break;
+
+                case 8:
+                    num8Threads++;
+                    time8Threads += _time;
+                    averageLocal = time8Threads / num8Threads;
+                    textBox6.Text = num8Threads.ToString() + ":" + averageLocal.ToString();
+                    break;
+
+                case 10:
+                    num10Threads++;
+                    time10Threads += _time;
+                    averageLocal = time10Threads / num10Threads;
+                    textBox7.Text = num10Threads.ToString() + ":" + averageLocal.ToString();
+                    break;
+
+                case 12:
+                    num12Threads++;
+                    time12Threads += _time;
+                    averageLocal = time12Threads / num12Threads;
+                    textBox8.Text = num12Threads.ToString() + ":" + averageLocal.ToString();
+                    break;
+
+                case 14:
+                    num14Threads++;
+                    time14Threads += _time;
+                    averageLocal = time14Threads / num14Threads;
+                    textBox9.Text = num14Threads.ToString() + ":" + averageLocal.ToString();
+                    break;
+
+                case 16:
+                    num16Threads++;
+                    time16Threads += _time;
+                    averageLocal = time16Threads / num16Threads;
+                    textBox10.Text = num16Threads.ToString() + ":" + averageLocal.ToString();
+                    break;
 
             }
         }
