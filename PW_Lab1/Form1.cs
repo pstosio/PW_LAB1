@@ -23,8 +23,16 @@ namespace PW_Lab1
         Thread[] threadsTab;
         int startTime, stopTime;
 
+        int timeSeq, numSeq;
+
+        ThreadManager manager = new ThreadManager();
+
         public Form1()
         {
+            // Initialiaze variables
+            timeSeq = 0;
+            numSeq = 0;
+
             InitializeComponent();
 
             // Disabling form control !
@@ -72,75 +80,62 @@ namespace PW_Lab1
             switch(comboBox1.Text.ToString())
             {
                 case "sequentially":
-                    
-                    threadsTab = new Thread[1];
-                    for (int i = 0; i < threadsTab.Length; i++ )
-                    {
-                        threadsTab[i] = this.getThread(1,i);
-                    }
-
-                    startTime = Environment.TickCount;
-                    foreach(Thread t in threadsTab)
-                    {
-                        t.Start();
-                    }
-                    foreach (Thread t in threadsTab)
-                    {
-                        t.Join();
-                    }
-                    stopTime = Environment.TickCount;
-                    this.addListing(1, stopTime - startTime);                    
+                    this.startProcess(1);                
                     break;
 
                 case "2 threads":
-
-                    threadsTab = new Thread[2];
-                     for (int i = 0; i < threadsTab.Length; i++ )
-                    {
-                        threadsTab[i] = this.getThread(2,i);
-                        threadsTab[i].Priority = ThreadPriority.Highest;
-                    }
-
-                    startTime = Environment.TickCount;
-                    foreach(Thread t in threadsTab)
-                    {
-                        t.Start();
-                    }
-                    foreach (Thread t in threadsTab)
-                    {
-                        t.Join();
-                    }
-                    stopTime = Environment.TickCount;
-
-                    this.addListing(2, stopTime - startTime);  
+                    this.startProcess(2);
                     break;
 
                 case "4 threads":
-                    threadsTab = new Thread[4];
-                     for (int i = 0; i < threadsTab.Length; i++ )
-                    {
-                        threadsTab[i] = this.getThread(4,i);
-                        threadsTab[i].Priority = ThreadPriority.Highest;
-                    }
-
-                    startTime = Environment.TickCount;
-                    foreach(Thread t in threadsTab)
-                    {
-                        t.Start();
-                    }
-                    foreach (Thread t in threadsTab)
-                    {
-                        t.Join();
-                    }
-                    stopTime = Environment.TickCount;
-
-                    this.addListing(4, stopTime - startTime);  
+                    this.startProcess(4);  
                     break;
 
+                case "8 threads":
+                    this.startProcess(8);
+                    break;
+
+                case "10 threads":
+                    this.startProcess(10);
+                    break;
+
+                case "12 threads":
+                    this.startProcess(12);
+                    break;
+
+                case "14 threads":
+                    this.startProcess(14);
+                    break;
+
+                case "16 threads":
+                    this.startProcess(16);
+                    break;
             }
 
             this.drawHistogram();
-            
+        }
+
+        private void startProcess(int _param)
+        {
+            threadsTab = new Thread[_param];
+            for (int i = 0; i < threadsTab.Length; i++)
+            {
+                threadsTab[i] = this.getThread(_param, i);
+                threadsTab[i].Priority = ThreadPriority.Highest;
+            }
+
+            startTime = Environment.TickCount;
+            foreach (Thread t in threadsTab)
+            {
+                t.Start();
+            }
+            foreach (Thread t in threadsTab)
+            {
+                t.Join();
+            }
+            stopTime = Environment.TickCount;
+
+            this.addListing(_param, stopTime - startTime);  
         }
 
         private void countHistogram(int _start, int _end)
@@ -191,29 +186,7 @@ namespace PW_Lab1
 
         private int[,] getSecion(int _threadQuantity)
         {
-            int[,] intTabTmp = new int[_threadQuantity,2];  
-
-            // Cons compartments
-            switch(_threadQuantity)
-            {
-                case 1: // Single thread 
-                    intTabTmp = new int[1,2] {{0, bytesTab.Length}};
-                    break;
-
-                case 2: // TWo threads
-                    intTabTmp = new int[2, 2] {{0, bytesTab.Length/2 -1},
-                                               {bytesTab.Length/2, bytesTab.Length}};
-                    break;
-
-                case 4: // Four threads
-                    intTabTmp = new int[4, 2] { {0, bytesTab.Length/4 -1}, 
-                                               {bytesTab.Length/4, bytesTab.Length/2 -1},
-                                               {bytesTab.Length/2, (bytesTab.Length - bytesTab.Length/4) -1},
-                                               {bytesTab.Length - bytesTab.Length/4, bytesTab.Length}};
-                    break;
-            }
-
-            return intTabTmp;
+            return manager.getIntervalsTresholds(bytesTab, _threadQuantity);
         }
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -234,8 +207,25 @@ namespace PW_Lab1
 
         private void addListing(int _threadQuantity, int _time)
         {
-            
-            textBox2.Text += System.Environment.NewLine + String.Format("{0} : {1}", _threadQuantity, _time);
+            textBox2.Text = System.Environment.NewLine + String.Format("{0} : {1}", _threadQuantity, _time);
+            this.addAverage(_threadQuantity, _time);
+        }
+
+        private void addAverage(int _case, int _time)
+        {
+            int averageLocal;
+
+            switch(_case)
+            {
+                case 1:
+                    numSeq++;
+                    timeSeq += _time;
+                    averageLocal = timeSeq / numSeq;
+                    textBox3.Text = numSeq.ToString() + ":" + averageLocal.ToString();
+                    break;
+
+
+            }
         }
     }
 }
