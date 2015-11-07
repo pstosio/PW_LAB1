@@ -220,6 +220,7 @@ namespace PW_Lab1
             string[] dane = new string[histogramTab.Length];
             try
             {
+
                 for (int i = 0; i < histogramTab.Length; i++)
                 {
                     dane[i] += histogramTab[i].ToString();
